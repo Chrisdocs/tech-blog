@@ -18,11 +18,11 @@ router.get('/', (req, res) => {
 //Get single User /api/users/id
 router.get('/:id', (req, res) => {
     User.findAll({
-        where: {
-            id: req.params.id
-        },
         attributes: {
             exclude: ['password']
+        },
+        where: {
+            id: req.params.id
         }
     })
     .then(userDbData => {
@@ -53,10 +53,32 @@ router.post('/', (req, res) => {
     })
 });
 
+router.post('/login', (req, res) => {
+    User.findOne({
+        where: {
+            email: req.body.email
+        }
+    })
+    .then(userDbData => {
+        if (!userDbData) {
+            res.status(400).json({ message: 'No user found with that email.' })
+            return;
+        }
+        const validPassword = userDbData.checkPassword(req.body.password);
+
+        if (!validPassword) {
+            res.status(400).json({ message: 'Incorrect password!' });
+            return;
+        }
+        res.json({ user: userDbData, message: 'You are now logged in!' });
+    }) 
+})
+
 
 // Put user /api/user/id
 router.put('/:id', (req, res) => {
     User.update(req.body, {
+        individualHooks: true,
         where: {
             id: req.params.id
         }
