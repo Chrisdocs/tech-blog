@@ -3,8 +3,12 @@ const { User } = require('../../models');
 
 // Get Users /api/users
 router.get('/', (req, res) => {
-    User.findAll({})
-    .then(userDbData => json(userDbData))
+    User.findAll({
+        attributes: {
+            exclude: ['password']
+        }
+    })
+    .then(userDbData => res.json(userDbData))
     .catch(err => {
         console.log(err);
         res.status(500).json(err);
@@ -16,6 +20,9 @@ router.get('/:id', (req, res) => {
     User.findAll({
         where: {
             id: req.params.id
+        },
+        attributes: {
+            exclude: ['password']
         }
     })
     .then(userDbData => {
