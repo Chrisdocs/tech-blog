@@ -1,13 +1,30 @@
 const router = require('express').Router();
-const { Post, User } = require('../../models');
+const { Post, User, Comment } = require('../../models');
+const { sequelize } = require('../../models/comment-model');
 
 // get all posts /api/posts
 router.get('/', (req, res) => {
     Post.findAll({
-        include: {
-            model: User,
-            attributes: [ 'username' ]
-        }
+        order: [['created_at', 'DESC']],
+        include: [
+            {
+                model: Comment,
+                attributes: [
+                    'id',
+                    'comment_text',
+                    'user_id',
+                    'post_id'
+                ],
+                include: {
+                    model: User,
+                    attributes: ['username']
+                }
+            },
+            {
+                model: User,
+                attributes: ['username']
+            }
+        ]
     })
     .then(postDbData => res.json(postDbData))
     .catch(err => {
@@ -17,18 +34,30 @@ router.get('/', (req, res) => {
 })
 
 // get a single post /api/posts/id
-router.get('/posts/:id', (req, res) => {
+router.get('/:id', (req, res) => {
     Post.findAll({
         where: {
             id: req.params.id
         },
-        include: {
-            model: User,
-            attributes: [
-                'username'
-            ]
-
-        }
+        include: [
+            {
+                model: Comment,
+                attributes: [
+                    'id',
+                    'comment_text',
+                    'user_id',
+                    'post_id'
+                ],
+                include: {
+                    model: User,
+                    attributes: ['username']
+                }
+            },
+            {
+                model: User,
+                attributes: ['username']
+            }
+        ]
     })
     .then(postDbData => {
         if (!postDbData) {
@@ -41,7 +70,7 @@ router.get('/posts/:id', (req, res) => {
         console.log(err);
         res.status(500).json(err);
     })
-})
+});
 
 // create a post /api/posts
 router.post('/', (req, res) => {
@@ -58,7 +87,7 @@ router.post('/', (req, res) => {
 })
 
 // update a post /api/posts/id
-router.put('/posts/:id', (req, res) => {
+router.put('/:id', (req, res) => {
     Post.update(req.body, {
         where: {
             id: req.params.id
@@ -78,7 +107,7 @@ router.put('/posts/:id', (req, res) => {
 })
 
 // delete a post /api/posts/id
-router.delete('./posts/:id', (req, res) => {
+router.delete('/:id', (req, res) => {
     Post.destroy({
         where: {
             id: req.params.id
